@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CS2 Loadout Builder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>CS2 Loadout Builder</h1>
+  <div id="generator">
+  <h2>Loadout Generator</h2>
+  <div id="slot-options"></div>
+  <div id="slot-options"></div>
+  <div id="locked-list"></div>
+  <input id="gen-min" type="number" placeholder="Total min €">
+  <input id="gen-max" type="number" placeholder="Total max €">
+  <select id="theme">
+  <option value="">Any colour</option>
+  <option value="red">Red</option>
+  <option value="orange">Orange</option>
+  <option value="yellow">Yellow</option>
+  <option value="green">Green</option>
+  <option value="blue">Blue</option>
+  <option value="purple">Purple</option>
+  <option value="pink">Pink</option>
+  <option value="black">Black</option>
+  <option value="white">White</option>
+  <option value="grey">Grey</option>
+</select>
+  <button id="generate">Generate loadout</button>
+  <div id="loadout"></div>
+</div>
+
+<h2>Browse skins</h2>
+  <input id="search" placeholder="Search skins (e.g. Redline)">
+  <select id="category">
+    <option value="">All categories</option>
+  </select>
+  <input id="min-price" type="number" placeholder="Min €">
+  <input id="max-price" type="number" placeholder="Max €">
+  <div id="skin-grid"></div>
+
+  <p style="margin-top:40px; opacity:0.6; font-size:14px;">
+  Not affiliated with Valve. Skin data from ByMykel's CSGO-API, prices from Skinport.
+</p>
+  <script src="script.js"></script>
+</body>
+</html>

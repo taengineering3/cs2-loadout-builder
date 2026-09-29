@@ -1,0 +1,135 @@
+body {
+  background: #14161a;
+  color: white;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+#skin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #23262d;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.price {
+  color: #4ade80;
+  font-weight: bold;
+}
+
+.card {
+  border: 2px solid #444;
+}
+
+.card img {
+  width: 100%;
+}
+
+#search {
+  padding: 10px;
+  width: 300px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  border: none;
+}
+
+#category {
+  padding: 10px;
+  margin-left: 10px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  border: none;
+}
+
+#min-price, #max-price {
+  padding: 10px;
+  width: 90px;
+  margin-left: 10px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  border: none;
+}
+
+#generator {
+  background: #1c1f26;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+
+#slot-options label {
+  margin-right: 16px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+#gen-min, #gen-max {
+  padding: 10px;
+  width: 130px;
+  border-radius: 6px;
+  border: none;
+  margin-right: 10px;
+}
+
+#generate {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  background: #4ade80;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#loadout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+#loadout-total {
+  grid-column: 1 / -1;
+  font-size: 18px;
+}
+
+.lock-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+}
+
+.locked-item {
+  margin-bottom: 10px;
+}
+
+.locked-item button {
+  margin-left: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+#theme {
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  margin-right: 10px;
+}
+.reroll-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #f59e0b;
+  cursor: pointer;
+  font-weight: bold;
+}
