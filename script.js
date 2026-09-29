@@ -70,18 +70,13 @@ function showSkins(list) {
       <p>${skin.rarity.name}</p>
       <p class="price">${priceText}</p>
       <button class="lock-btn">Lock in loadout</button>
+      ${csfloatHtml()}
     `;
+    wireCsfloat(card, skin.name);
     card.querySelector(".lock-btn").addEventListener("click", () => lockSkin(skin));
     grid.appendChild(card);
   }
 }
-
-searchBox.addEventListener("input", updateDisplay);
-categoryBox.addEventListener("change", updateDisplay);
-minBox.addEventListener("input", updateDisplay);
-maxBox.addEventListener("input", updateDisplay);
-
-loadSkins();
 
 // ---------- LOADOUT GENERATOR ----------
 
@@ -218,7 +213,9 @@ function showLoadout() {
       <h3>${skin.name}</h3>
       <p class="price">from €${prices[skin.name].toFixed(2)}</p>
       ${extra}
+      ${csfloatHtml()}
     `;
+    wireCsfloat(card, skin.name);
 
     if (!isLocked) {
       card.querySelector(".keep-box").addEventListener("change", event => {
@@ -333,3 +330,35 @@ document.querySelectorAll(".swatch").forEach(button => {
     button.classList.add("active");
   });
 });
+
+// ---------- CSFLOAT LINKS ----------
+
+const WEARS = ["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"];
+
+function csfloatHtml() {
+  const options = WEARS.map(w => `<option ${w === "Field-Tested" ? "selected" : ""}>${w}</option>`).join("");
+  return `<div class="buy-row">
+    <select class="wear-select">${options}</select>
+    <a class="buy-btn" href="#" target="_blank" rel="noopener">CSFloat ↗</a>
+  </div>`;
+}
+
+function wireCsfloat(card, skinName) {
+  const select = card.querySelector(".wear-select");
+  const link = card.querySelector(".buy-btn");
+  const update = () => {
+    const fullName = `${skinName} (${select.value})`;
+    link.href = "https://csfloat.com/search?market_hash_name=" + encodeURIComponent(fullName);
+  };
+  select.addEventListener("change", update);
+  update();
+}
+
+// ---------- START THE SITE ----------
+
+searchBox.addEventListener("input", updateDisplay);
+categoryBox.addEventListener("change", updateDisplay);
+minBox.addEventListener("input", updateDisplay);
+maxBox.addEventListener("input", updateDisplay);
+
+loadSkins();

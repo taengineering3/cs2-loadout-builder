@@ -205,3 +205,17 @@ footer { margin-top: 48px; color: var(--muted); font-size: 13px; text-align: cen
 }
 
 .swatch[data-theme="black"] { border-color: #4b5563; }
+
+.buy-row { display: flex; gap: 6px; margin-top: 8px; }
+.wear-select { flex: 1; min-width: 0; padding: 7px 26px 7px 8px; font-size: 12px; background-position: right 8px center; }
+.buy-btn {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--green);
+  color: #04130a;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.buy-btn:hover { filter: brightness(1.1); } 
