@@ -133,3 +133,8 @@ body {
   cursor: pointer;
   font-weight: bold;
 }
+.keep-label {
+  display: block;
+  margin-top: 8px;
+  cursor: pointer;
+}

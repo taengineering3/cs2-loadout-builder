@@ -122,7 +122,16 @@ function generateLoadout() {
     return;
   }
 
-  // for each slot, the list of skins that fit it AND have a price (locked skins stay fixed)
+  // skins the user ticked "Keep" on in the previous loadout
+  const keptSkins = {};
+  if (current) {
+    current.chosenSlots.forEach((slot, i) => {
+      const index = slots.indexOf(slot);
+      if (current.kept[index]) keptSkins[index] = current.picks[i];
+    });
+  }
+
+  // full pools for each slot (locked skins stay fixed)
   const pools = chosenSlots.map(slot => {
     const index = slots.indexOf(slot);
     if (locked[index]) return [locked[index]];
@@ -130,27 +139,33 @@ function generateLoadout() {
     return applyTheme(pool, theme);
   });
 
-  for (let i = 0; i < pools.length; i++) {
-    if (pools[i].length === 0) {
+  // pools used for generating: kept skins are fixed too
+  const genPools = chosenSlots.map((slot, i) => {
+    const index = slots.indexOf(slot);
+    return keptSkins[index] ? [keptSkins[index]] : pools[i];
+  });
+
+  for (let i = 0; i < genPools.length; i++) {
+    if (genPools[i].length === 0) {
       loadoutBox.innerHTML = `<p>No priced skins found for ${chosenSlots[i].name}.</p>`;
       return;
     }
   }
 
   // cheapest skin in each slot
-  const cheapest = pools.map(pool => Math.min(...pool.map(skin => prices[skin.name])));
+  const cheapest = genPools.map(pool => Math.min(...pool.map(skin => prices[skin.name])));
 
   for (let attempt = 0; attempt < 1000; attempt++) {
     let spent = 0;
     const picks = [];
     let ok = true;
 
-    for (let i = 0; i < pools.length; i++) {
+    for (let i = 0; i < genPools.length; i++) {
       // money we must keep aside for the slots after this one
       const reserved = cheapest.slice(i + 1).reduce((a, b) => a + b, 0);
       const cap = max - spent - reserved;
 
-      const options = pools[i].filter(skin => prices[skin.name] <= cap);
+      const options = genPools[i].filter(skin => prices[skin.name] <= cap);
       if (options.length === 0) { ok = false; break; }
 
       const pick = weightedPick(options, theme);
@@ -159,23 +174,40 @@ function generateLoadout() {
     }
 
     if (ok && spent >= min) {
-      current = { chosenSlots, picks, pools, theme, min, max };
+      // remember which slots are still being kept
+      const kept = {};
+      chosenSlots.forEach(slot => {
+        const index = slots.indexOf(slot);
+        if (keptSkins[index]) kept[index] = true;
+      });
+
+      current = { chosenSlots, picks, pools, theme, min, max, kept };
       showLoadout();
       return;
     }
   }
 
-  loadoutBox.innerHTML = "<p>Couldn't build a loadout in that range. Try a wider budget or fewer slots.</p>";
+  loadoutBox.innerHTML = "<p>Couldn't build a loadout in that range. Try a wider budget, fewer slots, or untick some Keeps.</p>";
 }
 
 function showLoadout() {
-  const { chosenSlots, picks } = current;
+  const { chosenSlots, picks, kept } = current;
   const total = picks.reduce((sum, skin) => sum + prices[skin.name], 0);
 
   loadoutBox.innerHTML = `<p id="loadout-total">Total: <span class="price">€${total.toFixed(2)}</span></p>`;
 
   picks.forEach((skin, i) => {
-    const isLocked = locked[slots.indexOf(chosenSlots[i])] !== undefined;
+    const index = slots.indexOf(chosenSlots[i]);
+    const isLocked = locked[index] !== undefined;
+    const isKept = kept[index] === true;
+
+    let extra = "";
+    if (isLocked) {
+      extra = "<p>🔒 Locked</p>";
+    } else {
+      extra = `<label class="keep-label"><input type="checkbox" class="keep-box" ${isKept ? "checked" : ""}> Keep</label>`;
+      if (!isKept) extra += '<button class="reroll-btn">Reroll</button>';
+    }
 
     const card = document.createElement("div");
     card.className = "card";
@@ -185,12 +217,19 @@ function showLoadout() {
       <img src="${skin.image}" alt="${skin.name}">
       <h3>${skin.name}</h3>
       <p class="price">from €${prices[skin.name].toFixed(2)}</p>
-      ${isLocked ? "<p>🔒 Locked</p>" : '<button class="reroll-btn">Reroll</button>'}
+      ${extra}
     `;
 
     if (!isLocked) {
-      card.querySelector(".reroll-btn").addEventListener("click", () => rerollSlot(i));
+      card.querySelector(".keep-box").addEventListener("change", event => {
+        kept[index] = event.target.checked;
+        showLoadout();
+      });
+      if (!isKept) {
+        card.querySelector(".reroll-btn").addEventListener("click", () => rerollSlot(i));
+      }
     }
+
     loadoutBox.appendChild(card);
   });
 }
