@@ -33,6 +33,7 @@ async function loadSkins() {
 }
 
 function updateDisplay() {
+  if (negativeCheck([minBox, maxBox], document.getElementById("browse-error"), "Prices can't be negative.")) return;
   const text = searchBox.value.toLowerCase();
   const category = categoryBox.value;
   const min = minBox.value === "" ? 0 : Number(minBox.value);
@@ -104,6 +105,9 @@ slots.forEach((slot, i) => {
 
 let current = null;
 function generateLoadout() {
+    const genMinBox = document.getElementById("gen-min");
+  const genMaxBox = document.getElementById("gen-max");
+  if (negativeCheck([genMinBox, genMaxBox], document.getElementById("gen-error"), "Budget can't be negative.")) return;
   const minText = document.getElementById("gen-min").value;
   const maxText = document.getElementById("gen-max").value;
   const min = minText === "" ? 0 : Number(minText);
@@ -360,5 +364,21 @@ searchBox.addEventListener("input", updateDisplay);
 categoryBox.addEventListener("change", updateDisplay);
 minBox.addEventListener("input", updateDisplay);
 maxBox.addEventListener("input", updateDisplay);
-
+["gen-min", "gen-max"].forEach(id => {
+  document.getElementById(id).addEventListener("input", () => {
+    negativeCheck(
+      [document.getElementById("gen-min"), document.getElementById("gen-max")],
+      document.getElementById("gen-error"),
+      "Budget can't be negative."
+    );
+  });
+});
 loadSkins();
+
+// ---------- INPUT CHECKS ----------
+
+function negativeCheck(boxes, errorBox, message) {
+  const bad = boxes.some(box => box.value !== "" && Number(box.value) < 0);
+  errorBox.textContent = bad ? message : "";
+  return bad;
+}

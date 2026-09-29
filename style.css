@@ -219,3 +219,18 @@ footer { margin-top: 48px; color: var(--muted); font-size: 13px; text-align: cen
   white-space: nowrap;
 }
 .buy-btn:hover { filter: brightness(1.1); } 
+
+/* hide the up/down arrows on number boxes */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* error messages */
+.error { color: #f87171; font-size: 13px; margin: 8px 0 0; }
+.error:empty { display: none; }
