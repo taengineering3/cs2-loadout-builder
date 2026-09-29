@@ -1,21 +1,65 @@
-MIT License
-
 Copyright (c) 2026 Tristan Olivier Aubin (taengineering3)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+CS2 Skin Loadout Generator — Non-Commercial Source-Available License
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. GRANT OF RIGHTS
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Permission is granted to any person obtaining a copy of this software and associated documentation files (the "Software") to:
+
+* View and study the source code.
+* Download and run the Software for personal use.
+* Use the Software for educational and non-commercial purposes.
+* Modify the Software for personal or educational purposes.
+* Create private derivative works for personal or educational use.
+
+2. RESTRICTIONS
+
+Without prior written permission from the copyright holder, you may NOT:
+
+* Sell, license, rent, lease, or otherwise commercially distribute the Software or any substantial portion of it.
+* Use the Software or any substantial portion of it in a commercial product or service.
+* Host the Software as a paid service or use it to provide a paid service.
+* Monetize the Software or a substantial portion of its functionality through advertising, subscriptions, donations, sponsorships, or other commercial means.
+* Redistribute modified or unmodified versions of the Software for commercial purposes.
+* Incorporate a substantial portion of the Software into another commercial application, website, or service.
+* Create or distribute a competing commercial product substantially based on the Software.
+* Sublicense or otherwise grant commercial rights to the Software.
+
+3. MODIFICATIONS AND REDISTRIBUTION
+
+You may modify the Software for personal and educational purposes.
+
+If you redistribute an unmodified or modified version of the Software for permitted non-commercial purposes, you must:
+
+* Retain this license.
+* Retain the original copyright notice.
+* Clearly indicate any modifications you have made.
+* Not imply that the modified version is the original Software or that it is endorsed by the copyright holder.
+
+4. THIRD-PARTY MATERIALS
+
+This license applies only to the original source code and other original materials created by the copyright holder.
+
+Third-party software, libraries, APIs, images, trademarks, skin artwork, market data, and other materials included in or used by the Software may be subject to separate licenses, terms of service, copyrights, or other rights. Nothing in this license grants permission to use such third-party materials beyond the rights provided by their respective owners.
+
+5. TRADEMARKS AND BRANDING
+
+"Counter-Strike", "Counter-Strike 2", "CS2", "Steam", and related names, logos, trademarks, and intellectual property are the property of their respective owners.
+
+This project is an independent fan-made project and is not affiliated with, endorsed by, or sponsored by Valve Corporation or any of its affiliates.
+
+This license does not grant permission to use any third-party trademarks or branding.
+
+6. COMMERCIAL PERMISSION
+
+The copyright holder may, at their sole discretion, grant additional commercial permissions.
+
+Requests for commercial use should be directed to the copyright holder.
+
+7. COPYRIGHT
+
+All rights not expressly granted under this license are reserved by the copyright holder.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
