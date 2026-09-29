@@ -323,3 +323,13 @@ function weightedPick(options, theme) {
 }
 
 document.getElementById("generate").addEventListener("click", generateLoadout);
+
+// ---------- COLOUR SWATCHES ----------
+
+document.querySelectorAll(".swatch").forEach(button => {
+  button.addEventListener("click", () => {
+    document.getElementById("theme").value = button.dataset.theme;
+    document.querySelectorAll(".swatch").forEach(b => b.classList.remove("active"));
+    button.classList.add("active");
+  });
+});

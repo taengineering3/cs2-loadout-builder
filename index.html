@@ -1,48 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CS2 Loadout Builder</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>CS2 Loadout Builder</h1>
-  <div id="generator">
-  <h2>Loadout Generator</h2>
-  <div id="slot-options"></div>
-  <div id="slot-options"></div>
-  <div id="locked-list"></div>
-  <input id="gen-min" type="number" placeholder="Total min €">
-  <input id="gen-max" type="number" placeholder="Total max €">
-  <select id="theme">
-  <option value="">Any colour</option>
-  <option value="red">Red</option>
-  <option value="orange">Orange</option>
-  <option value="yellow">Yellow</option>
-  <option value="green">Green</option>
-  <option value="blue">Blue</option>
-  <option value="purple">Purple</option>
-  <option value="pink">Pink</option>
-  <option value="black">Black</option>
-  <option value="white">White</option>
-  <option value="grey">Grey</option>
-</select>
-  <button id="generate">Generate loadout</button>
-  <div id="loadout"></div>
-</div>
+  <header class="topbar">
+    <div class="brand">◆ CS2 <span>Loadout Builder</span></div>
+    <input id="search" placeholder="Search skins, e.g. Redline">
+  </header>
 
-<h2>Browse skins</h2>
-  <input id="search" placeholder="Search skins (e.g. Redline)">
-  <select id="category">
-    <option value="">All categories</option>
-  </select>
-  <input id="min-price" type="number" placeholder="Min €">
-  <input id="max-price" type="number" placeholder="Max €">
-  <div id="skin-grid"></div>
+  <main>
+    <section id="generator">
+      <h2>Loadout Generator</h2>
+      <p class="sub">Pick a colour, set a budget, choose your slots, then generate.</p>
 
-  <p style="margin-top:40px; opacity:0.6; font-size:14px;">
-  Not affiliated with Valve. Skin data from ByMykel's CSGO-API, prices from Skinport.
-</p>
+      <div class="row">
+        <div class="field">
+          <span class="label">Colour theme</span>
+          <div class="swatches">
+            <button class="swatch active" data-theme="" title="Any colour">Any</button>
+            <button class="swatch" data-theme="red" style="--c:#ef4444" title="Red"></button>
+            <button class="swatch" data-theme="orange" style="--c:#f97316" title="Orange"></button>
+            <button class="swatch" data-theme="yellow" style="--c:#eab308" title="Yellow"></button>
+            <button class="swatch" data-theme="green" style="--c:#22c55e" title="Green"></button>
+            <button class="swatch" data-theme="blue" style="--c:#3b82f6" title="Blue"></button>
+            <button class="swatch" data-theme="purple" style="--c:#a855f7" title="Purple"></button>
+            <button class="swatch" data-theme="pink" style="--c:#ec4899" title="Pink"></button>
+            <button class="swatch" data-theme="black" style="--c:#111827" title="Black"></button>
+            <button class="swatch" data-theme="white" style="--c:#f3f4f6" title="White"></button>
+            <button class="swatch" data-theme="grey" style="--c:#6b7280" title="Grey"></button>
+          </div>
+          <input type="hidden" id="theme" value="">
+        </div>
+
+        <div class="field">
+          <span class="label">Total budget (€)</span>
+          <div class="pair">
+            <input id="gen-min" type="number" placeholder="Min">
+            <span>to</span>
+            <input id="gen-max" type="number" placeholder="Max">
+          </div>
+        </div>
+      </div>
+
+      <span class="label">Slots</span>
+      <div id="slot-options"></div>
+      <div id="locked-list"></div>
+      <button id="generate">Generate loadout</button>
+      <div id="loadout"></div>
+    </section>
+
+    <section>
+      <h2>Browse skins</h2>
+      <div class="filters">
+        <select id="category">
+          <option value="">All categories</option>
+        </select>
+        <input id="min-price" type="number" placeholder="Min €">
+        <input id="max-price" type="number" placeholder="Max €">
+      </div>
+      <div id="skin-grid"></div>
+    </section>
+
+    <footer>Not affiliated with Valve. Skin data from ByMykel's CSGO-API, prices from Skinport.</footer>
+  </main>
+
   <script src="script.js"></script>
 </body>
 </html>
