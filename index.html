@@ -4,18 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CS2 Loadout Builder</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">◆ CS2 <span>Loadout Builder</span></div>
-    <input id="search" placeholder="Search skins, e.g. Redline">
-  </header>
+  <a class="brand" href="#/">CS2 <span>Loadout Builder</span></a>
+    <nav>
+      <a href="#/" data-page="home">Home</a>
+      <a href="#/builder" data-page="builder">Builder</a>
+      <a href="#/browse" data-page="browse">Browse</a>
+      <a href="#/combos" data-page="combos">My Combos</a>
+    </nav>
+  </header> 
 
   <main>
-    <section id="generator">
-      <h2>Loadout Generator</h2>
-      <p class="sub">Pick a colour, set a budget, choose your slots, then generate.</p>
+  <section id="page-home" class="page">
+    <div class="hero">
+      <h1>Build your dream <span>CS2 Loadout</span></h1>
+      <p>Pick a colour and a budget and get a full set of skins in seconds. Lock in the ones you love, reroll the rest, then find them on CSFloat.</p>
+      <div class="hero-btns">
+        <a class="btn-main" href="#/builder">Open the builder</a>
+        <a class="btn-alt" href="#/browse">Browse skins</a>
+      </div>
+    </div>
+
+    <div class="howto">
+      <div><b>1. Choose</b>Pick a colour theme, a total budget and the weapon slots you want.</div>
+      <div><b>2. Generate</b>Get a loadout that fits your budget. Tick Keep on skins you like and generate again to replace the rest.</div>
+      <div><b>3. Lock and buy</b>Browse any skin, lock it into your loadout, and open it on CSFloat.</div>
+    </div>
+
+    <div class="daily">
+      <div id="daily-combo"><p class="sub">Loading today's combo...</p></div>
+    </div>
+  </section>
+
+  <section id="page-builder" class="page">
 
       <div class="row">
         <div class="field">
@@ -49,14 +73,19 @@
 
       <span class="label">Slots</span>
       <div id="slot-options"></div>
-      <div id="locked-list"></div>
       <button id="generate">Generate loadout</button>
       <div id="loadout"></div>
+      <div class="save-row">
+        <input id="combo-name" placeholder="Name your combo" maxlength="40">
+        <button id="save-combo">💾 Save to My Combos</button>
+        <button id="copy-link" class="btn-alt">🔗 Copy share link</button>
+      </div>
     </section>
 
-    <section>
+    <section id="page-browse" class="page">
       <h2>Browse skins</h2>
       <div class="filters">
+        <input id="search" placeholder="Search skins, e.g. Redline">
         <select id="category">
           <option value="">All categories</option>
         </select>
@@ -67,9 +96,22 @@
       <div id="skin-grid"></div>
     </section>
 
-    <footer>Not affiliated with Valve. Skin data from ByMykel's CSGO-API, prices from Skinport.</footer>
+    <section id="page-combos" class="page">
+      <h2>My Combos</h2>
+      <p class="sub">Combos you saved in this browser. Copy a link to share any of them with friends.</p>
+      <div id="combos-list"></div>
+    </section>
+
+    <section id="page-shared" class="page">
+      <div id="shared-box"></div>
+    </section>
+
+    <section id="page-skin" class="page">
+      <div id="skin-box"></div>
+    </section>
+    <footer>Not affiliated with Valve. Skin data from ByMykel's CSGO-API, prices from Skinport. CSFloat prices may differ.</footer>
   </main>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=5"></script>
 </body>
 </html>

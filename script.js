@@ -19,6 +19,11 @@ async function loadSkins() {
   const colorResponse = await fetch("colors.json");
   colors = await colorResponse.json();
 
+  try {
+    const wearResponse = await fetch("prices_by_wear.json");
+    pricesByWear = await wearResponse.json();
+  } catch (e) {}
+
   allSkins.sort(() => Math.random() - 0.5);
 
   const categories = new Set(allSkins.map(skin => skin.category.name));
@@ -28,7 +33,7 @@ async function loadSkins() {
     option.textContent = name;
     categoryBox.appendChild(option);
   }
-
+  renderDailyCombo();
   updateDisplay();
 }
 
@@ -65,6 +70,7 @@ function showSkins(list) {
     const card = document.createElement("div");
     card.className = "card";
     card.style.borderColor = skin.rarity.color;
+    card.style.setProperty("--rar", skin.rarity.color);
     card.innerHTML = `
       <img src="${skin.image}" alt="${skin.name}">
       <h3>${skin.name}</h3>
@@ -211,6 +217,7 @@ function showLoadout() {
     const card = document.createElement("div");
     card.className = "card";
     card.style.borderColor = skin.rarity.color;
+    card.style.setProperty("--rar", skin.rarity.color);
     card.innerHTML = `
       <p>${chosenSlots[i].name}</p>
       <img src="${skin.image}" alt="${skin.name}">
@@ -257,42 +264,40 @@ function rerollSlot(i) {
   showLoadout();
 }
 
-// ---------- LOCKED ITEMS ----------
+// ---------- LOCK IN LOADOUT ----------
 
-const locked = {};
+const locked = {}; // no longer used, but older code still refers to it
+
+function poolFor(slot, theme) {
+  return applyTheme(allSkins.filter(skin => slot.match(skin) && prices[skin.name] !== undefined), theme);
+}
 
 function lockSkin(skin) {
   const index = slots.findIndex(slot => slot.match(skin));
+  if (index === -1) { flash("The builder doesn't support " + skin.weapon.name + " yet."); return; }
+  if (prices[skin.name] === undefined) { flash("This skin has no price, so it can't be used in a budget."); return; }
 
-  if (index === -1) {
-    alert("This weapon type isn't in the generator yet.");
-    return;
+  const checkbox = document.getElementById("slot-" + index);
+  if (checkbox) checkbox.checked = true;
+
+  if (!current) current = { chosenSlots: [], picks: [], pools: [], theme: "", min: 0, max: Infinity, kept: {} };
+
+  const slot = slots[index];
+  let pos = current.chosenSlots.indexOf(slot);
+  if (pos === -1) {
+    pos = current.chosenSlots.findIndex(s => slots.indexOf(s) > index);
+    if (pos === -1) pos = current.chosenSlots.length;
+    current.chosenSlots.splice(pos, 0, slot);
+    current.picks.splice(pos, 0, skin);
+    current.pools.splice(pos, 0, poolFor(slot, current.theme));
+  } else {
+    current.picks[pos] = skin;
   }
-  if (prices[skin.name] === undefined) {
-    alert("This skin has no price, so it can't be used in a budget.");
-    return;
-  }
+  current.kept[index] = true;
 
-  locked[index] = skin;
-  document.getElementById("slot-" + index).checked = true;
-  showLocked();
-}
-
-function showLocked() {
-  const box = document.getElementById("locked-list");
-  box.innerHTML = "";
-
-  for (const index in locked) {
-    const skin = locked[index];
-    const item = document.createElement("div");
-    item.className = "locked-item";
-    item.innerHTML = `<span>🔒 ${slots[index].name}: ${skin.name} (€${prices[skin.name].toFixed(2)})</span> <button>Remove</button>`;
-    item.querySelector("button").addEventListener("click", () => {
-      delete locked[index];
-      showLocked();
-    });
-    box.appendChild(item);
-  }
+  showLoadout();
+  flash("Locked in: " + skin.name);
+  location.hash = "#/builder";
 }
 
 // ---------- COLOUR THEMES ----------
@@ -382,3 +387,459 @@ function negativeCheck(boxes, errorBox, message) {
   errorBox.textContent = bad ? message : "";
   return bad;
 }
+
+// ---------- PAGES ----------
+
+const PAGES = ["home", "builder", "browse", "combos", "shared", "skin"];
+
+function route() {
+  const name = location.hash.replace("#/", "").split("?")[0];
+  const page = PAGES.includes(name) ? name : "home";
+  document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === "page-" + page));
+  document.querySelectorAll(".topbar nav a").forEach(a => a.classList.toggle("active", a.dataset.page === page));
+  window.scrollTo(0, 0);
+  if (allSkins.length) {
+    if (page === "combos") renderMyCombos();
+    if (page === "shared") renderShared();
+    if (page === "skin") renderSkinPage();
+  }
+}
+
+window.addEventListener("hashchange", route);
+route();
+
+// ---------- COMBO OF THE DAY ----------
+
+let dailyCombo = null;
+
+const THEME_COLORS = {
+  red: "#ef4444", orange: "#f97316", yellow: "#eab308", green: "#22c55e", blue: "#3b82f6",
+  purple: "#a855f7", pink: "#ec4899", black: "#374151", white: "#f3f4f6", grey: "#6b7280"
+};
+
+// random numbers that depend on a text seed, so the same day gives the same "random" results
+function seededRandom(text) {
+  let seed = 0;
+  for (const ch of text) seed = (Math.imul(seed, 31) + ch.charCodeAt(0)) | 0;
+  return function () {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededPick(options, theme, rand) {
+  const weights = options.map(skin => colorScore(skin, theme) + 0.05);
+  let r = rand() * weights.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < options.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return options[i];
+  }
+  return options[options.length - 1];
+}
+
+function buildDailyCombo() {
+  const today = new Date().toISOString().slice(0, 10);
+  const rand = seededRandom("cs2-combo-" + today);
+
+  const themes = Object.keys(THEME_COLORS);
+  const theme = themes[Math.floor(rand() * themes.length)];
+  const budgets = [300, 500, 800, 1200];
+  const baseMax = budgets[Math.floor(rand() * budgets.length)];
+
+  const names = ["Knife", "Gloves", "AK-47", "M4A1-S", "AWP", "Desert Eagle"];
+  const chosenSlots = slots.filter(slot => names.includes(slot.name));
+
+  // sorted by name so every visitor builds from the same order
+  const pools = chosenSlots.map(slot =>
+    applyTheme(
+      allSkins
+        .filter(skin => slot.match(skin) && prices[skin.name] !== undefined)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+      theme
+    )
+  );
+  if (pools.some(pool => pool.length === 0)) return null;
+
+  const cheapest = pools.map(pool => Math.min(...pool.map(skin => prices[skin.name])));
+
+  // if the budget is too tight, widen it a little
+  for (const multiplier of [1, 1.5, 2, 4]) {
+    const max = baseMax * multiplier;
+    for (let attempt = 0; attempt < 300; attempt++) {
+      let spent = 0;
+      const picks = [];
+      let ok = true;
+      for (let i = 0; i < pools.length; i++) {
+        const reserved = cheapest.slice(i + 1).reduce((a, b) => a + b, 0);
+        const options = pools[i].filter(skin => prices[skin.name] <= max - spent - reserved);
+        if (options.length === 0) { ok = false; break; }
+        const pick = seededPick(options, theme, rand);
+        picks.push(pick);
+        spent += prices[pick.name];
+      }
+      if (ok && spent >= max * 0.5) {
+        return { date: today, theme, max, chosenSlots, picks, total: spent };
+      }
+    }
+  }
+  return null;
+}
+
+function renderDailyCombo() {
+  route();
+  const box = document.getElementById("daily-combo");
+  dailyCombo = buildDailyCombo();
+  if (!dailyCombo) { box.innerHTML = ""; return; }
+
+  const d = dailyCombo;
+  const themeName = d.theme[0].toUpperCase() + d.theme.slice(1);
+
+  box.innerHTML = `
+    <div class="daily-head">
+      <div>
+        <h2>🎲 Combo of the day</h2>
+        <p class="sub">A new loadout every day, the same for everyone.</p>
+      </div>
+      <div class="daily-tags">
+        <span class="chip"><span class="dot" style="background:${THEME_COLORS[d.theme]}"></span>${themeName}</span>
+        <span class="chip">Up to €${Math.round(d.max)}</span>
+        <span class="chip">Total €${d.total.toFixed(2)}</span>
+        <button class="btn-alt" id="use-daily">Use this combo</button>
+      </div>
+    </div>
+    <div id="daily-grid"></div>
+  `;
+
+  const grid = document.getElementById("daily-grid");
+  d.picks.forEach((skin, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.setProperty("--rar", skin.rarity.color);
+    card.innerHTML = `
+      <p>${d.chosenSlots[i].name}</p>
+      <img src="${skin.image}" alt="${skin.name}">
+      <h3>${skin.name}</h3>
+      <p class="price">from €${prices[skin.name].toFixed(2)}</p>
+      ${csfloatHtml()}
+    `;
+    wireCsfloat(card, skin.name);
+    grid.appendChild(card);
+  });
+
+  document.getElementById("use-daily").addEventListener("click", useDailyCombo);
+}
+
+function useDailyCombo() {
+  const d = dailyCombo;
+  slots.forEach((slot, i) => {
+    document.getElementById("slot-" + i).checked = d.chosenSlots.includes(slot);
+  });
+  document.getElementById("theme").value = d.theme;
+  document.querySelectorAll(".swatch").forEach(b => b.classList.toggle("active", b.dataset.theme === d.theme));
+  document.getElementById("gen-max").value = Math.round(d.max);
+
+  const kept = {};
+  d.chosenSlots.forEach(slot => { kept[slots.indexOf(slot)] = true; });
+  current = {
+    chosenSlots: [...d.chosenSlots],
+    picks: [...d.picks],
+    pools: d.chosenSlots.map(slot => poolFor(slot, d.theme)),
+    theme: d.theme, min: 0, max: d.max, kept
+  };
+  showLoadout();
+  location.hash = "#/builder";
+}
+// ---------- MY COMBOS AND SHARING ----------
+
+const STORE_KEY = "cs2-my-combos";
+
+function loadCombos() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch (e) { return []; }
+}
+function storeCombos(list) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch (e) {}
+}
+
+// makes text safe to put inside HTML (important, because share links can contain anything)
+function esc(text) {
+  return String(text).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function flash(message) {
+  let toast = document.getElementById("toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(flash.timer);
+  flash.timer = setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+function copyText(text, done) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(done).catch(() => prompt("Copy this link:", text));
+  } else {
+    prompt("Copy this link:", text);
+  }
+}
+
+function shareUrl(name, theme, skinNames) {
+  return location.origin + location.pathname + "#/shared?n=" + encodeURIComponent(name) +
+    "&t=" + encodeURIComponent(theme) + "&s=" + skinNames.map(encodeURIComponent).join("~");
+}
+
+function skinsFromNames(names) {
+  return names.map(name => allSkins.find(skin => skin.name === name)).filter(Boolean);
+}
+
+function fillCards(grid, skins) {
+  grid.innerHTML = "";
+  skins.forEach(skin => {
+    const slot = slots.find(s => s.match(skin));
+    const price = prices[skin.name];
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.setProperty("--rar", skin.rarity.color);
+    card.innerHTML = `
+      <p>${slot ? slot.name : esc(skin.weapon.name)}</p>
+      <img src="${skin.image}" alt="">
+      <h3>${esc(skin.name)}</h3>
+      <p class="price">${price !== undefined ? "from €" + price.toFixed(2) : "No price"}</p>
+      ${csfloatHtml()}
+    `;
+    wireCsfloat(card, skin.name);
+    card.addEventListener("click", event => {
+      if (event.target.closest("button, select, a, label, input")) return;
+      event.stopPropagation();
+      location.hash = "#/skin?n=" + encodeURIComponent(skin.name);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function buildPanel(title, subtitle, skins, theme, buttons) {
+  const total = skins.reduce((sum, skin) => sum + (prices[skin.name] || 0), 0);
+  const panel = document.createElement("div");
+  panel.className = "daily";
+  panel.innerHTML = `
+    <div class="daily-head">
+      <div><h2>${esc(title)}</h2><p class="sub">${esc(subtitle)}</p></div>
+      <div class="daily-tags">
+        ${theme ? `<span class="chip"><span class="dot" style="background:${THEME_COLORS[theme] || "#666"}"></span>${esc(theme)}</span>` : ""}
+        <span class="chip">Total €${total.toFixed(2)}</span>
+      </div>
+    </div>
+    <div class="combo-grid"></div>
+    <div class="combo-actions"></div>
+  `;
+  fillCards(panel.querySelector(".combo-grid"), skins);
+
+  const actions = panel.querySelector(".combo-actions");
+  buttons.forEach(b => {
+    const btn = document.createElement("button");
+    btn.className = b.cls || "btn-alt";
+    btn.textContent = b.label;
+    btn.addEventListener("click", b.onClick);
+    actions.appendChild(btn);
+  });
+  return panel;
+}
+
+function loadIntoBuilder(skins, theme) {
+  const pairs = [];
+  skins.forEach(skin => {
+    const index = slots.findIndex(s => s.match(skin));
+    if (index !== -1 && !pairs.some(p => p.index === index)) pairs.push({ index, skin });
+  });
+  if (pairs.length === 0) { flash("None of these weapons are in the builder yet."); return; }
+  pairs.sort((a, b) => a.index - b.index);
+
+  slots.forEach((slot, i) => {
+    document.getElementById("slot-" + i).checked = pairs.some(p => p.index === i);
+  });
+  document.getElementById("theme").value = theme;
+  document.querySelectorAll(".swatch").forEach(b => b.classList.toggle("active", b.dataset.theme === theme));
+
+  const kept = {};
+  pairs.forEach(p => { kept[p.index] = true; });
+  current = {
+    chosenSlots: pairs.map(p => slots[p.index]),
+    picks: pairs.map(p => p.skin),
+    pools: pairs.map(p => poolFor(slots[p.index], theme)),
+    theme, min: 0, max: Infinity, kept
+  };
+  showLoadout();
+  location.hash = "#/builder";
+}
+
+function renderMyCombos() {
+  const box = document.getElementById("combos-list");
+  const list = loadCombos();
+  if (list.length === 0) {
+    box.innerHTML = '<p class="sub">No saved combos yet. Build one in the Builder and click Save.</p>';
+    return;
+  }
+  box.innerHTML = "";
+  list.forEach(combo => {
+    const skins = skinsFromNames(combo.skins);
+    box.appendChild(buildPanel(combo.name, "Saved " + combo.date, skins, combo.theme, [
+      { label: "Open in builder", onClick: () => loadIntoBuilder(skins, combo.theme) },
+      { label: "🔗 Copy share link", onClick: () => copyText(shareUrl(combo.name, combo.theme, combo.skins), () => flash("Share link copied")) },
+      { label: "Delete", cls: "btn-danger", onClick: () => {
+          storeCombos(loadCombos().filter(c => c.id !== combo.id));
+          renderMyCombos();
+        } }
+    ]));
+  });
+}
+
+function renderShared() {
+  const box = document.getElementById("shared-box");
+  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  const names = (params.get("s") || "").split("~");
+  const skins = skinsFromNames(names);
+  if (skins.length === 0) {
+    box.innerHTML = '<p class="sub">This link doesn\'t contain a valid combo.</p>';
+    return;
+  }
+  const name = params.get("n") || "Shared combo";
+  const theme = params.get("t") || "";
+  box.innerHTML = "";
+  box.appendChild(buildPanel(name, "Shared with you", skins, theme, [
+    { label: "Open in builder", onClick: () => loadIntoBuilder(skins, theme) },
+    { label: "💾 Save to My Combos", onClick: () => {
+        const list = loadCombos();
+        list.unshift({ id: Date.now(), name, date: new Date().toISOString().slice(0, 10), theme, skins: skins.map(s => s.name) });
+        storeCombos(list);
+        flash("Saved to My Combos");
+      } }
+  ]));
+}
+
+function currentComboData() {
+  if (!current || current.picks.length === 0) return null;
+  return { skins: current.picks.map(skin => skin.name), theme: current.theme || "" };
+}
+
+document.getElementById("save-combo").addEventListener("click", () => {
+  const data = currentComboData();
+  if (!data) { flash("Generate or lock in a loadout first."); return; }
+  const list = loadCombos();
+  const nameBox = document.getElementById("combo-name");
+  const name = nameBox.value.trim() || "Combo " + (list.length + 1);
+  list.unshift({ id: Date.now(), name, date: new Date().toISOString().slice(0, 10), theme: data.theme, skins: data.skins });
+  storeCombos(list);
+  nameBox.value = "";
+  flash("Saved to My Combos");
+});
+
+document.getElementById("copy-link").addEventListener("click", () => {
+  const data = currentComboData();
+  if (!data) { flash("Generate or lock in a loadout first."); return; }
+  const name = document.getElementById("combo-name").value.trim() || "My combo";
+  copyText(shareUrl(name, data.theme, data.skins), () => flash("Share link copied"));
+});
+
+// ---------- SKIN PAGE ----------
+
+let pricesByWear = {};
+
+function similarSkins(skin, count) {
+  const keys = Object.keys(THEME_COLORS);
+  const base = colors[skin.name];
+  const distance = other => {
+    const c = colors[other.name];
+    if (!base || !c) return 99;
+    return keys.reduce((sum, k) => sum + Math.pow((base[k] || 0) - (c[k] || 0), 2), 0);
+  };
+  return allSkins
+    .filter(s => s !== skin && s.weapon.name === skin.weapon.name && prices[s.name] !== undefined)
+    .sort((a, b) => distance(a) - distance(b))
+    .slice(0, count);
+}
+
+function renderSkinPage() {
+  const box = document.getElementById("skin-box");
+  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  const skin = allSkins.find(s => s.name === (params.get("n") || ""));
+  if (!skin) { box.innerHTML = '<p class="sub">Skin not found.</p>'; return; }
+
+  const color = /^#[0-9a-f]{3,8}$/i.test(skin.rarity.color) ? skin.rarity.color : "#666";
+  const desc = (skin.description || "").replace(/\\n/g, "\n").replace(/<[^>]*>/g, "").trim();
+  const collections = (skin.collections || []).map(c => c.name).join(", ") || "None";
+  const cases = (skin.crates || []).map(c => c.name).slice(0, 4).join(", ") || "None";
+
+  const wearRows = (skin.wears || []).map(w => {
+    const p = (pricesByWear[skin.name] || {})[w.name];
+    const link = "https://csfloat.com/search?market_hash_name=" + encodeURIComponent(`${skin.name} (${w.name})`);
+    return `<div class="wear-row">
+      <span>${esc(w.name)}</span>
+      <span class="${p !== undefined ? "wear-price" : "muted"}">${p !== undefined ? "€" + p.toFixed(2) : "No listings"}</span>
+      <a class="buy-btn" href="${link}" target="_blank" rel="noopener">CSFloat ↗</a>
+    </div>`;
+  }).join("");
+
+  const c = colors[skin.name];
+  const bars = c
+    ? Object.keys(THEME_COLORS).filter(k => (c[k] || 0) >= 0.02).sort((a, b) => c[b] - c[a]).map(k =>
+        `<div class="bar-row"><span>${k}</span><div class="bar"><i style="width:${Math.round(c[k] * 100)}%;background:${THEME_COLORS[k]}"></i></div><span>${Math.round(c[k] * 100)}%</span></div>`
+      ).join("")
+    : '<p class="muted">No colour data for this skin.</p>';
+
+  box.innerHTML = `
+    <button class="btn-alt" id="skin-back">← Back</button>
+    <div class="skin-hero" style="--rar:${color}">
+      <div class="skin-img"><img src="${skin.image}" alt=""></div>
+      <div class="skin-info">
+        <h1>${esc(skin.name)}</h1>
+        <div class="daily-tags">
+          <span class="chip"><span class="dot" style="background:${color}"></span>${esc(skin.rarity.name)}</span>
+          <span class="chip">${esc(skin.weapon.name)}</span>
+          <span class="chip">${esc(skin.category.name)}</span>
+          ${skin.stattrak ? '<span class="chip">StatTrak™ exists</span>' : ""}
+          ${skin.souvenir ? '<span class="chip">Souvenir exists</span>' : ""}
+        </div>
+        ${desc ? `<p class="skin-desc">${esc(desc)}</p>` : ""}
+        <div class="facts">
+          <div><b>Float range</b>${skin.min_float} to ${skin.max_float}</div>
+          <div><b>Collection</b>${esc(collections)}</div>
+          <div><b>Found in</b>${esc(cases)}</div>
+        </div>
+        <div class="combo-actions">
+          <button class="btn-main" id="skin-lock">Lock in loadout</button>
+          <button class="btn-alt" id="skin-copy">🔗 Copy link</button>
+        </div>
+      </div>
+    </div>
+    <div class="skin-cols">
+      <div class="panel"><h2>Price by wear</h2>${wearRows}
+        <p class="muted small">Regular versions only, prices from Skinport. CSFloat prices may differ.</p></div>
+      <div class="panel"><h2>Colour breakdown</h2>${bars}</div>
+    </div>
+    <h2>Similar skins</h2>
+    <div class="combo-grid" id="similar-grid"></div>
+  `;
+
+  document.getElementById("skin-back").addEventListener("click", () => {
+    if (history.length > 1) history.back(); else location.hash = "#/browse";
+  });
+  document.getElementById("skin-lock").addEventListener("click", () => lockSkin(skin));
+  document.getElementById("skin-copy").addEventListener("click", () => {
+    const url = location.origin + location.pathname + "#/skin?n=" + encodeURIComponent(skin.name);
+    copyText(url, () => flash("Link copied"));
+  });
+  fillCards(document.getElementById("similar-grid"), similarSkins(skin, 6));
+}
+
+// clicking a card (but not its buttons or dropdowns) opens the skin page
+document.addEventListener("click", event => {
+  const card = event.target.closest(".card");
+  if (!card || event.target.closest("button, select, a, label, input")) return;
+  const title = card.querySelector("h3");
+  if (title) location.hash = "#/skin?n=" + encodeURIComponent(title.textContent);
+});
