@@ -806,7 +806,7 @@ function renderSkinPage() {
         </div>
         ${desc ? `<p class="skin-desc">${esc(desc)}</p>` : ""}
         <div class="facts">
-          <div><b>Float range</b>${skin.min_float} to ${skin.max_float}</div>
+          <div class="gauge-row"><b>Float range</b>${floatGauge(skin)}</div>
           <div><b>Collection</b>${esc(collections)}</div>
           <div><b>Found in</b>${esc(cases)}</div>
         </div>
@@ -843,3 +843,16 @@ document.addEventListener("click", event => {
   const title = card.querySelector("h3");
   if (title) location.hash = "#/skin?n=" + encodeURIComponent(title.textContent);
 });
+
+function floatGauge(skin) {
+  const zones = [["FN", 0, 0.07], ["MW", 0.07, 0.15], ["FT", 0.15, 0.38], ["WW", 0.38, 0.45], ["BS", 0.45, 1]];
+  const min = Number(skin.min_float), max = Number(skin.max_float);
+  const segments = zones.map(([label, from, to]) => `<span style="width:${(to - from) * 100}%">${label}</span>`).join("");
+  return `
+    <div class="gauge">
+      <div class="zones">${segments}</div>
+      <i class="shade" style="left:0;width:${min * 100}%"></i>
+      <i class="shade" style="left:${max * 100}%;right:0"></i>
+    </div>
+    <p class="muted small">This skin ranges from ${min} to ${max}. The greyed-out part of the bar can't occur.</p>`;
+}
